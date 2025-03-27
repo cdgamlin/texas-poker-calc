@@ -9,7 +9,7 @@ Deck::Deck() {
             // Card type in lower 52 bits
             deck[i] = static_cast<uint64_t>(1) << i;
             // Suit count in upper 12 bits (4 groups of 3 bits)
-            deck[i] += static_cast<uint64_t>(1) << (suitIndex * 3 + 52);
+            deck[i] |= static_cast<uint64_t>(1) << (suitIndex * 3 + 52);
         }
         shuffle();
 }
@@ -26,7 +26,7 @@ void Deck::remove(uint64_t cards) {
 
     // Remove suit count information using bitwise AND with a mask
     // to isolate the lower 52 bits representing card types.
-    cards &= 0xFFFFFFFFFFFFF; 
+    cards &= 0xFFFFFFFFFFFFF;
 
     // Keep looping though deck until all cards are removed
     while (cards) {
@@ -34,7 +34,7 @@ void Deck::remove(uint64_t cards) {
             if (deck[i] & cards) {
                 // Remove cards from list of cards to be removed using bitwise AND
                 // with the bitwise NOT of deck[i] to clear the corresponding bits.
-                cards &= ~deck[i]; 
+                cards &= ~deck[i];
                 // Swap card with top of permanent inactive pile
                 std::swap(deck[i], deck[deckSize - 1]);
                 deckSize--;
@@ -53,10 +53,10 @@ uint64_t Deck::deal(int numberOfCards ) {
     // and the shuffling algorithm becomes trivial
     uint64_t cardsDealt = 0;
     for (int i = 0; i < numberOfCards ; ++i) {
-        // Add random card to dealt pile using bitwise OR 
+        // Add random card to dealt pile using bitwise OR
         // to accumulate the bits representing the dealt cards.
         int cardIndex = rand() % cardsLeft ;
-        cardsDealt += deck[cardIndex]; // This is actually cardsDealt |= deck[cardIndex] in the original code
+        cardsDealt |= deck[cardIndex];
         // Move card to top of temporary inactive pile
         std::swap(deck[cardIndex], deck[cardsLeft - 1]);
         cardsLeft --;
@@ -75,7 +75,7 @@ uint64_t Deck::deal(int numberOfCards ) {
 // uint64_t Deck::listCards() {
 //     uint64_t cards = 0;
 //     for (int i = 0; i < cardsLeft ; ++i) {
-//         cards += deck[i];
+//         cards |= deck[i];
 //     }
 //     return cards;
 // }

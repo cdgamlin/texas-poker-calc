@@ -88,10 +88,10 @@ uint64_t HandEvaluator::evaluate(uint64_t cards) const {
                 // Look up the number of cards in the rank
                 bits = bitCountTable[bits];
                 // Accumulate hand rank values based on card counts
-                handType += handRankValues [bits];
+                handType += handRankValues[bits];
                 if (bits != 0) {
                     bits -= 1;
-                    cardRank += static_cast<uint64_t>(1) << (13 * bits + rank);
+                    cardRank |= static_cast<uint64_t>(1) << (13 * bits + rank);
                 }
             }
         }

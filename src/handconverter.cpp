@@ -13,13 +13,13 @@ uint64_t HandConverter::stringToHand(const std::string& cardsAsString) const {
         // Each card is represented by a unique bit in a 64-bit integer
         // rankIndex * 4 + suitIndex calculates the bit position for the card
         // (1) << (rankIndex * 4 + suitIndex) sets the bit for the card
-        hand += static_cast<uint64_t>(1) << (rankIndex * 4 + suitIndex);
+        hand |= static_cast<uint64_t>(1) << (rankIndex * 4 + suitIndex);
 
         // Add to suit counter
         // The upper 12 bits of the hand integer are used to store suit counts
         // suitIndex * 3 + 52 calculates the bit position for the suit counter
         // (1) << (suitIndex * 3 + 52) sets the bit for the suit counter
-        hand += static_cast<uint64_t>(1) << (suitIndex * 3 + 52);
+        hand |= static_cast<uint64_t>(1) << (suitIndex * 3 + 52);
     }
     return hand;
 }

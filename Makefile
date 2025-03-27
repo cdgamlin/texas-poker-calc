@@ -7,7 +7,7 @@ SRCS = src/main.cpp src/deck.cpp src/handconverter.cpp src/handevaluator.cpp
 all: main
 
 main: $(OBJS)
-	$(CXX) -o $@ $^ $(CXXFLAGS) 
+	$(CXX) -o $@ $^ $(CXXFLAGS)
 
 %.o: %.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS)  # Apply CXXFLAGS to object file compilation
