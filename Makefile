@@ -1,8 +1,8 @@
 CXX = g++
 CXXFLAGS = -I$(PWD)/include  # Absolute include path
 
-OBJS = src/main.o src/deck.o src/handconverter.o src/handevaluator.o
-SRCS = src/main.cpp src/deck.cpp src/handconverter.cpp src/handevaluator.cpp
+OBJS = src/main.o src/deck.o src/handconverter.o src/handevaluator.o src/pcg.o
+SRCS = src/main.cpp src/deck.cpp src/handconverter.cpp src/handevaluator.cpp src/pcg.cpp
 
 all: main
 

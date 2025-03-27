@@ -1,17 +1,19 @@
 #include "deck.hpp"
 
 Deck::Deck() {
-        // Create deck
-        deckSize = 52;
-        int suitIndex ;
-        for (int i = 0; i < deckSize ; ++i) {
-            suitIndex = i % 4;
-            // Card type in lower 52 bits
-            deck[i] = static_cast<uint64_t>(1) << i;
-            // Suit count in upper 12 bits (4 groups of 3 bits)
-            deck[i] |= static_cast<uint64_t>(1) << (suitIndex * 3 + 52);
-        }
-        shuffle();
+    // Seed the PCG random number generator
+    rng = PCG();
+    // Create deck
+    deckSize = 52;
+    int suitIndex ;
+    for (int i = 0; i < deckSize ; ++i) {
+        suitIndex = i % 4;
+        // Card type in lower 52 bits
+        deck[i] = static_cast<uint64_t>(1) << i;
+        // Suit count in upper 12 bits (3 bits for each of the 4 suits)
+        deck[i] += static_cast<uint64_t>(1) << (suitIndex * 3 + 52);
+    }
+    shuffle();
 }
 
 void Deck::shuffle() {
@@ -28,7 +30,7 @@ void Deck::remove(uint64_t cards) {
     // to isolate the lower 52 bits representing card types.
     cards &= 0xFFFFFFFFFFFFF;
 
-    // Keep looping though deck until all cards are removed
+    // Keep looping though deck until all required cards are removed
     while (cards) {
         for (int i = 0; i < deckSize; ++i) {
             if (deck[i] & cards) {
@@ -47,16 +49,16 @@ void Deck::remove(uint64_t cards) {
     shuffle();
 }
 
-uint64_t Deck::deal(int numberOfCards ) {
+uint64_t Deck::deal(int numberOfCards) {
     // Uses a swapping algorithm to make things fast
     // so deck needs no more processing after random card is selected
     // and the shuffling algorithm becomes trivial
     uint64_t cardsDealt = 0;
-    for (int i = 0; i < numberOfCards ; ++i) {
+    for (int i = 0; i < numberOfCards; ++i) {
         // Add random card to dealt pile using bitwise OR
         // to accumulate the bits representing the dealt cards.
-        int cardIndex = rand() % cardsLeft ;
-        cardsDealt |= deck[cardIndex];
+        int cardIndex = rng.nextUInt32() % cardsLeft ;
+        cardsDealt += deck[cardIndex];
         // Move card to top of temporary inactive pile
         std::swap(deck[cardIndex], deck[cardsLeft - 1]);
         cardsLeft --;
@@ -75,7 +77,7 @@ uint64_t Deck::deal(int numberOfCards ) {
 // uint64_t Deck::listCards() {
 //     uint64_t cards = 0;
 //     for (int i = 0; i < cardsLeft ; ++i) {
-//         cards |= deck[i];
+//         cards += deck[i];
 //     }
 //     return cards;
 // }

@@ -13,16 +13,18 @@ HandEvaluator::HandEvaluator() {
         bitCountTable[i] = count;
     }
 
-    // Initialize hand rank scores
-    handRankValues [0] = 0;
-    handRankValues [1] = 1;
-    handRankValues [2] = 8;
-    handRankValues [3] = 32;
-    handRankValues [4] = 128;
+    // Initialize hand rank values. These values are used to quickly 
+    // determine the type of hand (e.g., pair, two pair, trips) based on 
+    // the number of cards of each rank.
+    handRankValues[0] = 0;
+    handRankValues[1] = 1;
+    handRankValues[2] = 8;
+    handRankValues[3] = 32;
+    handRankValues[4] = 128;
 }
 
-uint64_t HandEvaluator::removeLowestCards(uint64_t hand, int numberOfCards ) const {
-    for (int i = 0; i < numberOfCards ; ++i) {
+uint64_t HandEvaluator::removeLowestCards(uint64_t hand, int numberOfCards) const {
+    for (int i = 0; i < numberOfCards; ++i) {
         hand &= hand - 1; // Clears the least significant bit set to 1
     }
     return hand;
@@ -34,7 +36,7 @@ uint64_t HandEvaluator::shiftCards(uint64_t hand, int posFrom, int posTo) const 
     // & 0x1FFF masks the bits to extract only the desired ones
     uint64_t bits = (hand >> (posFrom * 13)) & 0x1FFF;
     hand ^= (bits << (posFrom * 13)); // Clear bits at posFrom
-    hand |= (bits << (posTo * 13)); // Set bits at posTo
+    hand += (bits << (posTo * 13)); // Set bits at posTo
     return hand;
 }
 
@@ -47,7 +49,7 @@ uint64_t HandEvaluator::shiftLowestCard(uint64_t hand, int posFrom, int posTo) c
     // bits &= -bits; sets all bits to 0 except the least significant bit set to 1
     bits &= -bits;
     hand ^= (bits << (posFrom * 13)); // Clear the isolated bit at posFrom
-    hand |= (bits << (posTo * 13)); // Set the isolated bit at posTo
+    hand += (bits << (posTo * 13)); // Set the isolated bit at posTo
     return hand;
 }
 
@@ -74,30 +76,40 @@ uint64_t HandEvaluator::evaluate(uint64_t cards) const {
                     // Highest hand type
                     handType = 255;
                     // std::cout << "Straight-Flush" << std::endl;
-                    return (static_cast<uint64_t>(handType ) << 52) | (i/4);
+                    return (static_cast<uint64_t>(handType) << 52) | (i/4);
                 }
             }
         }
 
-        // Fast stats for hand types other than Straights and Flushes
+        // This block calculates fast stats for hand types 
+        // other than Straights and Flushes
+        // It determines the number of cards of each rank and 
+        // accumulates hand rank values accordingly
         {
-            int bits = 0;
+            int bits = 0; // Variable to store the 4 bits representing a rank
+            // Iterate through each rank (2 to Ace)
             for (int rank = 0; rank < 13; ++rank) {
                 // Get the 4 bits for the currently assessed rank
                 bits = (cards >> (rank*4)) & 0xF;
                 // Look up the number of cards in the rank
                 bits = bitCountTable[bits];
                 // Accumulate hand rank values based on card counts
+                // handRankValues is an array that assigns a value to each type of hand 
+                // (e.g., pair, two pair, trips)
                 handType += handRankValues[bits];
+                // If there are cards of this rank (bits != 0), update cardRank
+                // cardRank is used to store the ranks of the cards in the hand, 
+                // weighted by their importance in the hand type
                 if (bits != 0) {
-                    bits -= 1;
-                    cardRank |= static_cast<uint64_t>(1) << (13 * bits + rank);
+                    bits -= 1; // Adjust 'bits' for indexing into cardRank
+                    // Set a bit in cardRank to represent the current rank
+                    cardRank += static_cast<uint64_t>(1) << (13 * bits + rank);
                 }
             }
         }
 
         // Check: 4-of-Kind and Full-House
-        switch (handType ) {
+        switch (handType) {
             case 131: // 4-of-Kind
                 cardRank = removeLowestCards(cardRank, 2);
                 // std::cout << "4-of-Kind" << std::endl;
@@ -131,7 +143,7 @@ uint64_t HandEvaluator::evaluate(uint64_t cards) const {
         }
         // Early return for 4-of-Kind and Full-House
         if (handType >= 42) {
-            return (static_cast<uint64_t>(handType ) << 52) | cardRank;
+            return (static_cast<uint64_t>(handType) << 52) | cardRank;
         }
 
         // Check: Flush
@@ -148,7 +160,7 @@ uint64_t HandEvaluator::evaluate(uint64_t cards) const {
                     // Remove any excess cards
                     cards = removeLowestCards(cards, suitCount - 5);
                     // std::cout << "Flush" << std::endl;
-                    return (static_cast<uint64_t>(handType ) << 52) | (cards >> suit);
+                    return (static_cast<uint64_t>(handType) << 52) | (cards >> suit);
                 }
             }
         }
@@ -158,7 +170,7 @@ uint64_t HandEvaluator::evaluate(uint64_t cards) const {
             // Determine what card ranks are in hand
             int cardsPresent = 0;
             for (int i = 0; i < 4; ++i) {
-                cardsPresent |= (cardRank >> (i * 13));
+                cardsPresent += (cardRank >> (i * 13));
             }
             // Scan to detect a Straight
             uint64_t cardMask = 0x1F;
@@ -166,13 +178,13 @@ uint64_t HandEvaluator::evaluate(uint64_t cards) const {
                 if (((cardsPresent >> i) & cardMask) == cardMask) {
                     handType = 39;
                     // std::cout << "Straight" << std::endl;
-                    return (static_cast<uint64_t>(handType ) << 52) | i;
+                    return (static_cast<uint64_t>(handType) << 52) | i;
                 }
             }
         }
 
         // Process all remaining hand types
-        switch (handType ) {
+        switch (handType) {
             case 36: // Trips
                 cardRank = removeLowestCards(cardRank, 2);
                 // std::cout << "Trips" << std::endl;
@@ -197,5 +209,5 @@ uint64_t HandEvaluator::evaluate(uint64_t cards) const {
                 break;
         }
 
-        return (static_cast<uint64_t>(handType ) << 52) | cardRank;
+        return (static_cast<uint64_t>(handType) << 52) | cardRank;
     }

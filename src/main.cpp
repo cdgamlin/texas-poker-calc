@@ -7,8 +7,6 @@
 #include "handevaluator.hpp"
 
 int main(int argc, char* argv[]) {
-    srand(time(0));
-
     Deck deck;
     HandConverter handConverter;
     HandEvaluator handEvaluator;
@@ -42,9 +40,9 @@ int main(int argc, char* argv[]) {
 
     deck.remove(playerCards + communityCards);
 
-    // Show what the player can see
-    std::cout << handConverter.handToString(playerCards, true) << std::endl;
-    std::cout << handConverter.handToString(communityCards, true) << std::endl;
+    // // Show what the player can see
+    // std::cout << handConverter.handToString(playerCards, true) << std::endl;
+    // std::cout << handConverter.handToString(communityCards, true) << std::endl;
 
     // // Some useful stuff for debugging the hand evaluator
     // uint64_t score = handEvaluator.evaluate(playerCards + communityCards);
@@ -75,7 +73,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Output results
-    std::cout << "winCount : " << winCount << "/" << numberOfSimulations << std::endl;
+    std::cout << winCount << "/" << numberOfSimulations << std::endl;
 
 	return 0;
 }

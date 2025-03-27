@@ -5,6 +5,14 @@
 #include <string>
 #include <unordered_map>
 
+/*
+    Converts between card representations.
+
+    This class provides methods to convert between string representations of 
+    poker hands (e.g., "As Kd") and internal bitwise representations 
+    used for efficient hand evaluation.
+ */
+
 class HandConverter {
 private:
     // Lookup tables for ranks and suits
